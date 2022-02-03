@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs/dist/bcrypt");
 const mongoose = require("mongoose");
 const validator = require("validator");
+const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema(
   {
@@ -16,6 +17,7 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
+      unique: true,
       required: true,
       trim: true,
       validate(value) {
@@ -30,13 +32,37 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    tokens: [{
+      token: {
+        type: String,
+        reuired: true
+      }
+    }]
   }
 );
 
-userSchema.pre('save',async function(next){
+userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  if(user.isModified('password')){
-    user.password = await bcrypt.hash(user.password,8);
+
+  const token = jwt.sign({ _id: user._id.toString() }, "imearningjs");
+  user.tokens = user.tokens.concat({ token });
+  user.save();
+}
+
+userSchema.statics.findByCredential = async (email, password) => {
+  const user = await User.findOne({ email });
+  if (!user) throw new Error("Email ID not found");
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) throw new Error("Password Missmatch");
+
+  return user;
+}
+
+userSchema.pre('save', async function (next) {
+  const user = this;
+  if (user.isModified('password')) {
+    user.password = await bcrypt.hash(user.password, 8);
   }
   next();
 });
