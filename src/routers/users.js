@@ -56,13 +56,30 @@ router.post('/user/login', async (req, res) => {
   }
 });
 
-router.get("/users", auth, async (req, res) => {
+router.post('/user/logout', auth, async (req, res) => {
   try {
-    const users = await User.find({});
-    res.send(users);
+    req.user.tokens = req.user.tokens.filter(token => {
+      return token.token !== req.token;
+    });
+    await req.user.save();
+    res.send(req.user);
   } catch (e) {
     res.status(500).send("Error : " + e);
   }
+});
+
+router.post('/user/logoutall', auth, async (req, res) => {
+  try {
+    req.user.tokens = [];
+    await req.user.save();
+    res.send();
+  } catch (e) {
+    res.status(500).send("Error : " + e);
+  }
+});
+
+router.get("/users/me", auth, async (req, res) => {
+  res.send(req.user);
 });
 
 router.get("/user/:id", auth, async (req, res) => {
