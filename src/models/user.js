@@ -47,7 +47,6 @@ userSchema.methods.toJSON = function(){
 
   delete userObject.password;
   delete userObject.tokens;
-
   return userObject;
 
 }
@@ -58,6 +57,7 @@ userSchema.methods.generateAuthToken = async function () {
   const token = jwt.sign({ _id: user._id.toString() }, "imearningjs");
   user.tokens = user.tokens.concat({ token });
   user.save();
+  return token;
 }
 
 userSchema.statics.findByCredential = async (email, password) => {
