@@ -1,15 +1,14 @@
 const express = require("express");
+const multer = require("multer");
 const router = new express.Router();
 const User = require("../models/user");
 const auth = require("../middleware/auth");
-
 //signup User
 router.post("/user", async (req, res) => {
-
   const user = new User(req.body);
   try {
     const token = await user.generateAuthToken();
-    res.status(201).send({user,token});
+    res.status(201).send({ user, token });
   } catch (e) {
     res.status(400).send("Error : " + e);
   }
@@ -22,7 +21,7 @@ router.patch("/user/me", auth, async (req, res) => {
     "contact",
     "email",
     "password",
-  ];  
+  ];
 
   const currentUpdate = Object.keys(req.body);
   const isValidUpdate = currentUpdate.every((cu) => {
@@ -36,7 +35,9 @@ router.patch("/user/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
-    currentUpdate.forEach(update => user[update] = req.body[update]);
+    currentUpdate.forEach(
+      (update) => (user[update] = req.body[update])
+    );
 
     await user.save();
 
@@ -48,21 +49,24 @@ router.patch("/user/me", auth, async (req, res) => {
 });
 
 //login user
-router.post('/user/login', async (req, res) => {
+router.post("/user/login", async (req, res) => {
   try {
-    const user = await User.findByCredential(req.body.email, req.body.password);
+    const user = await User.findByCredential(
+      req.body.email,
+      req.body.password
+    );
     const token = await user.generateAuthToken();
 
-    res.send({user,token});
+    res.send({ user, token });
   } catch (e) {
     res.status(404).send("Error : " + e);
   }
 });
 
 //logout current session
-router.post('/user/logout', auth, async (req, res) => {
+router.post("/user/logout", auth, async (req, res) => {
   try {
-    req.user.tokens = req.user.tokens.filter(token => {
+    req.user.tokens = req.user.tokens.filter((token) => {
       return token.token !== req.token;
     });
     await req.user.save();
@@ -73,7 +77,7 @@ router.post('/user/logout', auth, async (req, res) => {
 });
 
 // logout from all session in all devices
-router.post('/user/logoutall', auth, async (req, res) => {
+router.post("/user/logoutall", auth, async (req, res) => {
   try {
     req.user.tokens = [];
     await req.user.save();
@@ -99,5 +103,30 @@ router.delete("/user/me", auth, async (req, res) => {
     res.status(400).send("Error : " + e);
   }
 });
+
+//upload avatar
+const upload = multer({
+  dest: "upload/avatar",
+  limits: {
+    fileSize: 5000000,
+  },
+  fileFilter(req, file, callback) {
+    if (!file.originalname.match(/\.(JPG|PNG|JPEG)$/)) {
+      return callback(new Error("Upload only image file!"));
+    }
+    callback(undefined, true);
+  },
+});
+router.post(
+  "/upload/avatar",
+  upload.single("avatar"),
+  (req, res) => {
+    res.send();
+  },
+  (error, req, res, next) => {
+    res.status(400).send(error.message);
+    next();
+  }
+);
 
 module.exports = router;
