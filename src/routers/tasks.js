@@ -16,10 +16,26 @@ router.post("/task", auth, async (req, res) => {
   }
 });
 
+//GET /task?completed=true/false
+//GET /task?limit=10&skip=0
 router.get("/tasks", auth, async (req, res) => {
   try {
-    // const tasks = await Task.find({ owner: req.user._id });
-    await req.user.populate('tasks');
+    let match = {};
+    let options = {};
+    if(req.query.completed){
+      match.completed = req.query.completed === "true";
+    }
+    if(req.query.limit){
+      options.limit = parseInt(req.query.limit);
+    }
+    if(req.query.skip){
+      options.skip = parseInt(req.query.skip)-1;
+    }
+    await req.user.populate({
+      path:"tasks",
+      match,
+      options
+    });
     res.send(req.user.tasks);
   } catch (e) {
     res.status(500).send("Error : " + e);
