@@ -39,6 +39,9 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    avatar: {
+      type: Buffer
+    }
   },
   {
     timestamps: true,
@@ -65,7 +68,7 @@ userSchema.methods.generateAuthToken = async function () {
 
   const token = jwt.sign(
     { _id: user._id.toString() },
-    "imearningjs"
+    process.env.JWT_SECRET
   );
   user.tokens = user.tokens.concat({ token });
   user.save();
