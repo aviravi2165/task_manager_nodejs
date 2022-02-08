@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { CONNECTION_URL, DB_PORT, DB_NAME } = process.env;
-mongoose.connect(`${CONNECTION_URL}:${DB_PORT}/${DB_NAME}`, {
+mongoose.connect(`${process.env.CONNECTION_URL}:${process.env.DB_PORT}/${process.env.DB_NAME}`, {
     useNewUrlParser: true
 });
