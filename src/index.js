@@ -16,7 +16,7 @@ const upload = multer({
   fileFilter(req, file, callback) {
     if (!file.originalname.match(/\.(JPG|PNG|JPEG)/)) {
       return callback(
-        new Error("File must be a Image Document")
+        new Error("File must be a Image Document"
       );
     }
     callback(undefined, true);
